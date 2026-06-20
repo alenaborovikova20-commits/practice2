@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
+#include <vector>
 #include "include/module_compute.h"
 #include "include/el_gamal_compute.h"
 #include "include/euclid_compute.h"
-//using namespace std;
 
 enum choices{
     MODUL = 1,
@@ -46,13 +46,14 @@ int main(){
             std::cout << "Введите модуль: ";
             std::cin >> m;
 
-            int u, v, gcd;
-            reverse_num(c, m, u, v, gcd);
-
+            int gcd;
+            std::vector<Step> steps = reverse_num(c, m, gcd);
+            std::cout << steps;
+            std::cout << "\n";
             if (gcd != 1){
                 std::cout << "Ошибка: обратного числа не существует (НОД != 1)" << std::endl;
             } else {
-                int inverse = u % m;
+                int inverse = steps.back().u % m;
                 if (inverse < 0) inverse += m;
                 std::cout << "\nРезультат расширенного алгоритма Евклида:" << std::endl;
                 std::cout << "Взаимообратное число = " << inverse << std::endl;
