@@ -1,4 +1,4 @@
-//#include "../include/el_gamal_compute.h"
+#include "../include/module_compute.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -6,17 +6,6 @@
 #include <ctime>
 
 using namespace std;
-
-static int64_t mod_pow(int64_t base, int64_t power, int64_t modulo) {
-    int64_t result = 1;
-    base %= modulo;
-    while (power > 0) {
-        if (power & 1) result = (result * base) % modulo;
-        base = (base * base) % modulo;
-        power >>= 1;
-    }
-    return result;
-}
 
 static int64_t mod_inv(int64_t a, int64_t m) {
     int64_t m0 = m, y = 0, x = 1;
@@ -34,13 +23,12 @@ static int64_t mod_inv(int64_t a, int64_t m) {
     return x;
 }
 
-void elgamal(int64_t p, int64_t g, const string& input_filename, 
-             const string& encrypted_filename, const string& decrypted_filename) {
-    
+int elgamal(int64_t p, int64_t g, const string& input_filename, 
+             const string& encrypted_filename, const string& decrypted_filename) {      
     srand(time(nullptr));
     
     int64_t x = rand() % (p - 2) + 2;
-    int64_t y = mod_pow(g, x, p);
+    int64_t y = binary_modulo(g, x, p);
     
     cout << "\nЭЛЬ-ГАМАЛЬ\n";
     cout << "Секретный ключ x = " << x << endl;
@@ -49,7 +37,7 @@ void elgamal(int64_t p, int64_t g, const string& input_filename,
     ifstream in(input_filename, ios::binary);
     if (!in) {
         cout << "Ошибка: не удалось открыть файл " << input_filename << endl;
-        return;
+        return -1;
     }
     vector<unsigned char> data((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
     in.close();
@@ -58,7 +46,7 @@ void elgamal(int64_t p, int64_t g, const string& input_filename,
     ofstream enc(encrypted_filename, ios::binary);
     if (!enc) {
         cout << "Ошибка: не удалось создать файл " << encrypted_filename << endl;
-        return;
+        return -1;
     }
     
     cout << "Шифрование...\n";
@@ -67,8 +55,8 @@ void elgamal(int64_t p, int64_t g, const string& input_filename,
     for (unsigned char byte : data) {
         int64_t m = byte;
         int64_t k = rand() % (p - 2) + 1;
-        int64_t a = mod_pow(g, k, p);
-        int64_t b = (m * mod_pow(y, k, p)) % p;
+        int64_t a = binary_modulo(g, k, p);
+        int64_t b = (m * binary_modulo(y, k, p)) % p;
         
         blocks.push_back({a, b});
         enc.write((char*)&a, sizeof(int64_t));
@@ -80,15 +68,16 @@ void elgamal(int64_t p, int64_t g, const string& input_filename,
     ofstream dec(decrypted_filename, ios::binary);
     if (!dec) {
         cout << "Ошибка: не удалось создать файл " << decrypted_filename << endl;
-        return;
+        return -1;
     }
     
     cout << "Расшифрование...\n";
     for (auto& block : blocks) {
-        int64_t ax = mod_pow(block.first, x, p);
+        int64_t ax = binary_modulo(block.first, x, p);
         int64_t m = (block.second * mod_inv(ax, p)) % p;
         dec.put((unsigned char)m);
     }
     dec.close();
     cout << "Расшифровано и сохранено в " << decrypted_filename << "\n\n";
+    return 1;
 }

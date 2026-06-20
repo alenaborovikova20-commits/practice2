@@ -35,12 +35,11 @@ int ferma_modulo(int base, int power, int mod, int* new_power) {
 }
 
 
-int binary_modulo(int base, int power, int mod) {
+int64_t binary_modulo(int64_t base, int64_t power, int64_t mod) {
     base = base % mod;  
     if (base == 0 && power > 0) return -1;
-    
-    int result = 1;
-    
+    int64_t result = 1;
+
     while (power > 0) {
         if (power & 1) {                    
             result = mod_mul(result, base, mod);
